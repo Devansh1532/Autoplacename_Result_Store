@@ -1,19 +1,19 @@
 const { clickValue, googleValue } = require("../models/schema");
 
-const { TOPICS } = require("../topics");
+const { TOPICS } = require("../kafka/topics");
 
 async function saveData(topic, messages) {
-
   if (topic == TOPICS.CLICKED_VALUE) {
     await clickValue.create({
-      query: messages.query,
-      result: messages.result,
-      source: messages.source,
-    });
-    console.log("Saved click data to MongoDB");
+     searchQuery: messages.searchQuery,    
+     timestamp: messages.timestamp,
+     place: messages.place,
+     source : messages.source
 
-  } 
-  else if (topic == TOPICS.GOOGLE_RESULT){
+    }
+    );
+    console.log("Saved click data to MongoDB", messages.value);
+  } else if (topic == TOPICS.GOOGLE_RESULT) {
     await googleValue.create({
       success: messages.success,
       query: messages.query,

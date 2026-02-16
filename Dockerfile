@@ -11,7 +11,7 @@ RUN npm install
 COPY . .
 
 
-ENTRYPOINT ["node", "index.js"]
+ENTRYPOINT ["node", "index"]
 
 # CMD ["nodemon", "index"]
 

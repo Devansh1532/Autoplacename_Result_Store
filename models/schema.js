@@ -32,22 +32,30 @@ const googleResultSchema = new mongoose.Schema({
 
 const clickResultSchema = new mongoose.Schema({
     
-    query: {
+    searchQuery: {
         type: String,
-        required: true,
+        required: false,
         unique: false
     },
     
-    result : {
-        type: Array,
-        required: true,
+    timestamp: {
+        type: String,
+        required: false,
+        unique: false
+    },
+    place : {
+        type: Map,
+        of: mongoose.Schema.Types.Mixed,
+        required: false,
         unique: false
     },
     source : {
-        type: String ,
+        type: String,
         required: false,
-        unique: false
+        unique:false
+
     }
+    
 }, {timestamps: true})
 
 const googleValue = mongoose.model("google_results", googleResultSchema)

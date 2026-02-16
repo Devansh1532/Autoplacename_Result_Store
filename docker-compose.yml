@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  
+ 
+   
+
+    # networks:
+    #   - inter-service-communication
+    # extra_hosts: 
+    #   - "host.docker.internal:host-gateway"
+    # volumes:
+    #   - kafka-topics:/var/lib/kafka/data
+  
+   
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+       MONGO_INITDB_ROOT_USERNAME: root
+       MONGO_INITDB_ROOT_PASSWORD: example
+      
+    networks:
+      - inter-service-communication
+    # extra_hosts: 
+    #   - "host.docker.internal:host-gateway"
+
+  
+  backend:
+    build: .
+    hostname: backend_service
+    container_name: backend_service
+    # depends_on:
+    #   broker:
+    #     condition: service_healthy
+    # network_mode: host
+    ports:
+      - "8000:8000"
+    
+    environment:
+     KAFKA_BROKERS : 88.198.46.251:30092
+     MONGO_URL: mongodb://root:example@mongo:27017/user-database?authSource=admin
+     PORT : "8000"
+      
+
+    networks:
+      - inter-service-communication
+      
+networks:
+  inter-service-communication:
+    driver: bridge
+
+# volumes:
+#   kafka-topics:
+#     external: true
+  
+  
