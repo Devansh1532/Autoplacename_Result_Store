@@ -1,4 +1,4 @@
 module.exports.TOPICS = {
     CLICKED_VALUE : "drivdo.search.clicked.topic",
-    GOOGLE_RESULT : "drivado.search.google.topic"
+    BACKUP_DATA : "drivado.search.backup.topic"
 }

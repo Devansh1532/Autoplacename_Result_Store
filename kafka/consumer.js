@@ -5,7 +5,7 @@ The job of Consumer is to accpet data from the Kafka pipeline and save it into M
 
 */
 
-const kafka = require("../kafka");
+const {kafka} = require("../kafka");
 const { TOPICS } = require("./topics");
 const { saveData } = require("../controllers/saveData");
 // const { kafka } = require("kafkajs");
@@ -21,7 +21,7 @@ async function startConsumer() {
 async function receiveMessage() {
   try {
     await consumer.subscribe({
-      topics: [TOPICS.CLICKED_VALUE, TOPICS.GOOGLE_RESULT],
+      topics: [TOPICS.CLICKED_VALUE, TOPICS.BACKUP_DATA],
       fromBeginning: false,
     });
     await consumer.run({

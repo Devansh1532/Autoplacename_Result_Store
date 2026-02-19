@@ -1,29 +1,45 @@
-const { clickValue, googleValue } = require("../models/schema");
+const { backupData, clickValue, countValue } = require("../models/schema");
 
 const { TOPICS } = require("../kafka/topics");
+
+
 
 async function saveData(topic, messages) {
   if (topic == TOPICS.CLICKED_VALUE) {
     await clickValue.create({
-     searchQuery: messages.searchQuery,    
-     timestamp: messages.timestamp,
-     place: messages.place,
-     source : messages.source
+     searchQuery: messages.searchQuery,  
+     placeId: messages.place.placeId,  
+     timestamp: messages.timestamp
+    
 
     }
     );
-    console.log("Saved click data to MongoDB", messages.value);
-  } else if (topic == TOPICS.GOOGLE_RESULT) {
-    await googleValue.create({
-      success: messages.success,
-      query: messages.query,
-      count: messages.count,
-      result: messages.result,
+    const count =  countValue.findOne({placeId: messages.place.placeId})
+    const q = await count.exec()
+    console.log(q)
+    if(q == null){
+      await countValue.create({
+        placeId: messages.place.placeId,
+        count: 1,
+        timestamp: messages.timestamp
+    })}
+    else {
+
+      await countValue.updateOne({placeId: messages.place.placeId},{$inc: {count: 1}})
+
+    }
+    console.log("Saved click data to MongoDB", messages);
+  } else if (topic == TOPICS.BACKUP_DATA) {
+    await backupData.create({
+      searchQuery: messages.searchQuery,    
+      timestamp: messages.timestamp,
+      place: messages.place,
       source: messages.source,
     });
 
-    console.log("Saved google data to MongoDB");
+    console.log("Saved backup data to MongoDB");
   }
 }
 
 module.exports = { saveData };
+

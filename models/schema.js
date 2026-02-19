@@ -1,36 +1,6 @@
 const mongoose = require('mongoose')
 
-const googleResultSchema = new mongoose.Schema({
-    
-    success : {
-        type: Boolean,
-        required: true,
-        unique: false
-    },
-    query: {
-        type: String,
-        required: true,
-        unique: false
-    },
-    count: {
-        type: Number,
-        required: false,
-        unique: false
-    },
-    result : {
-        type: Array,
-        required: true,
-        unique: false
-    },
-    source : {
-        type: String ,
-        required: false,
-        unique: false
-    }
-}, {timestamps: true})
-
-
-const clickResultSchema = new mongoose.Schema({
+const backupDataSchema = new mongoose.Schema({
     
     searchQuery: {
         type: String,
@@ -56,9 +26,59 @@ const clickResultSchema = new mongoose.Schema({
 
     }
     
-}, {timestamps: true})
+})
 
-const googleValue = mongoose.model("google_results", googleResultSchema)
+
+const clickResultSchema = new mongoose.Schema({
+    
+    searchQuery: {
+        type: String,
+        required: false,
+        unique: false
+    },
+    
+    timestamp: {
+        type: String,
+        required: false,
+        unique: false
+    },
+    placeId : {
+        type: String,
+        required: false,
+        unique: false
+    }
+
+    }
+    
+)
+
+const countSchema = new mongoose.Schema({
+    
+    placeId : {
+        type: String,
+        required: false,
+        unique: false
+    },
+
+    count : {
+        type: Number,
+        required: false,
+        unique: false
+    },
+
+    timestamp: {
+        type: String,
+        required: false,
+        unique: false
+    }
+    
+
+    }
+    
+)
+
+const backupData = mongoose.model("backup_data", backupDataSchema)
 const clickValue = mongoose.model("click_result", clickResultSchema)
+const countValue = mongoose.model("count_value", countSchema)
 
-module.exports = {googleValue, clickValue}
+module.exports = {backupData, clickValue, countValue}
