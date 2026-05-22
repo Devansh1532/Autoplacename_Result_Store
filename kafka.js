@@ -1,26 +1,9 @@
-// const { Kafka } = require("kafkajs");
-// require("dotenv").config();
-
-// const kafka = new Kafka({
-//   clientId: "my-app",
-//   brokers: [...process.env.KAFKA_BROKERS.split(",")],
-//   connectionTimeout: 50000,
-//   requestTimeout: 30000,
-//   // retry: {
-//   //       initialRetryTime: 300,
-//   //       retries: 10,
-//   //     }
-// });
-
-// module.exports = kafka;
-
-
-const { Kafka } = require("kafkajs");
-require("dotenv").config();
+import { Kafka } from "kafkajs";
+import "dotenv/config"
 
 const brokers = process.env.KAFKA_BROKERS;
 
-module.exports.kafka =
+const kafka =
   process.env.NODE_ENV === "production"
     ? new Kafka({
         clientId: "drivado-api",
@@ -64,3 +47,5 @@ module.exports.kafka =
           retries: 10,
         },
       });
+
+export {kafka}

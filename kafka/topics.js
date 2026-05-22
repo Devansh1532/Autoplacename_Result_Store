@@ -1,8 +1,32 @@
-module.exports.TOPICS = {
+export const TOPICS = {
   CLICKED_VALUE: "drivado.search.clicked.topic",
-  BACKUP_DATA: "drivado.search.backup.topic",
+  EXTERNAL_DATA: "drivado.search.backup.topic",
   ORS_RESPONSE: "drivado.search.ors.topic"
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // const TOPIC_DELIMETER = ".";
 

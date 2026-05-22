@@ -1,33 +1,17 @@
-/*
 
-This server acts as the convergence point for all that is happening in this kafka_test folder
+import express from "express"
+import { connectMongoDB} from "./connections.js";
+import { runConsumer }  from "./kafka/consumer.js";
+import {kafka} from "./kafka.js";
+import {TOPICS} from "./kafka/topics.js";
+import {drizzle} from "drizzle-orm/mysql2";
+// import {connectMySQL} from './connections.js';
+import "dotenv/config"
 
-*/
-const express = require("express");
-const { connectMongoDB } = require("./connections");
-const { runConsumer } = require("./kafka/consumer");
-const {kafka} = require("./kafka")
-const {TOPICS} = require("./kafka/topics")
-
-// const { TOPICS } = require("./topics");
-// const { runConsumer } = require("./kafka/consumer");
-require("dotenv").config()
 const app = express();
-// const app2 = express();
-
 
 app.use(express.json());
-// app.use("/results", router);
-// // app.listen(process.env.PORT, () => console.log("Server Started"));
-app.listen(process.env.PORT, '0.0.0.0', () => console.log("Server Started"));
 
-// (async () => {
-//   console.log(process.env.KAFKA_BROKERS)
-//   await startConsumer();
-// })();
-
-// const mongourl = "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}"+"@${MONGO_HOST}/${MONGO_DB}?authSource=admin"
-// const mongourl = "mongodb://mongo:27017/user-database"
 
 const mongourl = process.env.MONGO_URL
 console.log(mongourl)
@@ -38,21 +22,33 @@ connectMongoDB(mongourl).then(() => {
 (async () => {
   await runConsumer({
     kafka,
-    groupId: "drivado.search.ors.group",
+    groupId: "drivado.search.orsdata.group",
     topic: TOPICS.ORS_RESPONSE
 
   });
   await runConsumer({
     kafka,
-    groupId: "drivado.search.clicked.group",
+    groupId: "drivado.search.clickedvalue.group",
     topic: TOPICS.CLICKED_VALUE
 
   });
   await runConsumer({
     kafka,
-    groupId: "drivado.search.backup.group",
-    topic: TOPICS.BACKUP_DATA
+    groupId: "drivado.search.backupdata.group",
+    topic: TOPICS.EXTERNAL_DATA
 
   });
   
 })();
+
+app.listen(process.env.PORT, '0.0.0.0', () => console.log("Server Started"));
+
+
+
+
+
+
+
+
+
+
