@@ -1,12 +1,17 @@
-export const TOPICS = {
-  CLICKED_VALUE: "drivado.search.clicked.topic",
-  EXTERNAL_DATA: "drivado.search.backup.topic",
-  ORS_RESPONSE: "drivado.search.ors.topic"
-};
-
-
-
-
+export const KAFKA_CONSUMERS = [
+  {
+     TOPIC: "drivado.search.clicked.topic",
+     GROUP : "drivado.search.clickedvalue.group"
+  },
+  {
+     TOPIC: "drivado.search.backup.topic",
+     GROUP : "drivado.search.backupdata.group",
+  },
+  {
+     TOPIC: "drivado.search.ors.topic",
+     GROUP : "drivado.search.orsdata.group"
+  }
+]
 
 
 

@@ -1,8 +1,6 @@
 import "dotenv/config";
 import { pgdb } from "../connections.js";
 import { sql } from "drizzle-orm";
-import {format} from "node-pg-format"
-
 import {
   externalDataTable,
   clickResultTable,
@@ -10,68 +8,26 @@ import {
   routeCountTable,
   orsDataTable,
 } from "../models/orm_schema.js";
+
+import { KAFKA_CONSUMERS } from "../kafka/topics.js";
+
 import {
-  externalData,
-  clickValue,
-  placeCountValue,
-  routeCountValue,
-  orsData,
-} from "../models/schema.js";
-import { z } from "zod";
-import { TOPICS } from "../kafka/topics.js";
-// import { text } from "drizzle-orm/gel-core";
+  externalSchema,
+  clickSchema,
+  orsSchema
+} from "../validation/validate.js"
 
-const externalDataValid = z.object({
-  placeId: z.string(),
-  timestamp: z.string(),
-  lat: z.float32(),
-  lng: z.float32(),
-  postcode: z.string(),
-  address: z.string(),
-  source: z.string(),
-});
-
-const clickResultValid = z.object({
-  searchQuery: z.string(),
-  timestamp: z.string(),
-  placeId: z.string(),
-});
-
-const orsDataValid = z.object({
-  from_lat: z.float32(),
-  from_lng: z.float32(),
-  to_lat: z.float32(),
-  to_lng: z.float32(),
-})
-
-const click_buffer = [];
-const external_buffer = [];
-const ors_buffer = [];
-
-async function cacheData(topic, messages) {
-  if (topic == TOPICS.CLICKED_VALUE) click_buffer.push(messages);
-  else if (topic == TOPICS.EXTERNAL_DATA) external_buffer.push(messages);
-  else if (topic == TOPICS.ORS_RESPONSE) ors_buffer.push(messages);
-}
-
-async function updatePlaceCount(savedPlaceBatch) {
-  let i = savedPlaceBatch.length - 1;
+async function updatePlaceCount(savedPlace) {
   try {
-    while (i >= 0) {
-      await placeCountValue.updateOne(
-        { placeId: savedPlaceBatch[i]["placeId"] },
-        { $inc: { count: 1 } },
-        { upsert: true },
-      );
       await pgdb
         .insert(placeCountTable)
         .values({
-          placeId: savedPlaceBatch[i]["placeId"],
-          timestamp: savedPlaceBatch[i]["insertedAt"],
+          placeId: savedPlace["placeId"],
+          timestamp: savedPlace["insertedAt"],
           count: 1,
         })
-        .onConflictDoUpdate({ target: placeCountTable.placeId, targetWhere: sql`${placeCountTable.placeId} = ${savedPlaceBatch[i--]}`, set: { count: sql`${placeCountTable.count}+ 1` } });
-    }
+        .onConflictDoUpdate({ target: placeCountTable.placeId, targetWhere: sql`${placeCountTable.placeId} = ${savedPlace}`, set: { count: sql`${placeCountTable.count}+ 1` } });
+    
     console.log("Saved count value to Postgres successfully!");
   } catch (error) {
     console.log(
@@ -82,24 +38,17 @@ async function updatePlaceCount(savedPlaceBatch) {
   
 }
 
-async function updateRouteCount(savedRouteBatch) {
-  let i = savedRouteBatch.length - 1;
+async function updateRouteCount(savedRoute) {
   try {
-    while (i >= 0) {
-      await routeCountValue.updateOne(
-        { route_id: savedRouteBatch[i]["route_id"] },
-        { $inc: { count: 1 } },
-        { upsert: true },
-      );
       await pgdb
         .insert(routeCountTable)
         .values({
-          route_id: savedRouteBatch[i]["route_id"],
-          timestamp: savedRouteBatch[i]["timestamp"],
+          route_id: savedRoute["route_id"],
+          timestamp: savedRoute["timestamp"],
           count: 1,
         })
-        .onConflictDoUpdate({ target: routeCountTable.route_id, targetWhere: sql`${routeCountTable.route_id} = ${savedRouteBatch[i--]}`, set: { count: sql`${routeCountTable.count}+ 1` } });
-    }
+        .onConflictDoUpdate({ target: routeCountTable.route_id, targetWhere: sql`${routeCountTable.route_id} = ${savedRoute}`, set: { count: sql`${routeCountTable.count}+ 1` } });
+    
     console.log("Saved route count value to Postgres successfully!");
   } catch (error) {
     console.log(
@@ -110,55 +59,46 @@ async function updateRouteCount(savedRouteBatch) {
   
 }
 
-async function flushORSBuffer() {
-  if (ors_buffer.length == 0) return;
-  let orsBatchData = ors_buffer.splice(0, ors_buffer.length);
-  console.log(orsBatchData);
-  const updatedORSBatch = orsBatchData.map((op, i) => {
-    if (orsBatchData[i]["distance_km"] || orsBatchData[i]["duration_min"] != null) {
-      op = {
-        ...op,
+async function flushORSBuffer(orsMessage) {
+  if (orsMessage["distance_km"] || orsMessage["duration_min"] != null) {
+      orsMessage = {
+        ...orsMessage,
         route_id:
           "Drv_" +
           (
             Math.abs(
-              (Number(orsBatchData[i]["from_lng"]) +
-                Number(orsBatchData[i]["from_lat"]) +
-                Number(orsBatchData[i]["distance_km"])) *
+              (Number(orsMessage["from_lng"]) +
+                Number(orsMessage["from_lat"]) +
+                Number(orsMessage["distance_km"])) *
                 10000,
             ).toFixed(0) +
               Math.abs(
-                (Number(orsBatchData[i]["to_lng"]) +
-                  Number(orsBatchData[i]["to_lat"]) +
-                  Number(orsBatchData[i++]["duration_min"])) *
+                (Number(orsMessage["to_lng"]) +
+                  Number(orsMessage["to_lat"]) +
+                  Number(orsMessage["duration_min"])) *
                   10000,
               ).toFixed(0)
           )
       };
-    } else {
-      op = { ...op, route_id: "Drv_" + "null_" + (
+  } else {
+    orsMessage = { ...orsMessage, route_id: "Drv_" + "null_" + (
+          Math.abs(
+            (Number(orsMessage["from_lng"]) +
+              Number(orsMessage["from_lat"])) *
+              10000,
+          ).toFixed(0) +
             Math.abs(
-              (Number(orsBatchData[i]["from_lng"]) +
-                Number(orsBatchData[i]["from_lat"])) *
+              (Number(orsMessage["to_lng"]) +
+                Number(orsMessage["to_lat"])) *
                 10000,
-            ).toFixed(0) +
-              Math.abs(
-                (Number(orsBatchData[i]["to_lng"]) +
-                  Number(orsBatchData[i]["to_lat"])) *
-                  10000,
-              ).toFixed(0)
-          ) };
-    }
-    return op;
-  });
-  // const updatedBatchData = await Promise.all(fetchAllPromises)
-  console.log(updatedORSBatch);
-  updateRouteCount(updatedORSBatch);
-  // dbStore()
-  await orsData.insertMany(updatedORSBatch);
-  console.log("Saved ORS data to MongoDB");
+            ).toFixed(0)
+        ) };
+  }
+  console.log(orsMessage);
+  updateRouteCount(orsMessage);
+
   try {
-    await pgdb.insert(orsDataTable).values(updatedORSBatch)
+    await pgdb.insert(orsDataTable).values(orsMessage)
     console.log("Sent the ORS data to PostgreSQL!");
   } catch (error) {
     console.log(
@@ -169,22 +109,9 @@ async function flushORSBuffer() {
   }
 }
 
-async function flushExternalBuffer() {
-  if (external_buffer.length == 0) return;
-  const insertedAt = Date.now().toString();
-
-  let extBatchData = external_buffer.splice(0, external_buffer.length);
-
-  const extUpdatedData = extBatchData.map((op) => {
-    let updated_op = { ...op, insertedAt: insertedAt };
-
-    return updated_op;
-  });
-  console.log(extUpdatedData);
-  await externalData.insertMany(extUpdatedData);
-  console.log("Saved external data to MongoDB");
+async function flushExternalBuffer(extMessage) {
   try {
-    await pgdb.insert(externalDataTable).values(extUpdatedData)
+    await pgdb.insert(externalDataTable).values(extMessage)
     console.log("Saved the external location details to PostgreSQL");
   } catch (error) {
     console.log(
@@ -194,22 +121,12 @@ async function flushExternalBuffer() {
   }
 }
 
-async function flushClickBuffer() {
-  if (click_buffer.length == 0) return;
+async function flushClickBuffer(clickMessage) {
   const insertedAt = Date.now().toString();
-
-  let batchData = click_buffer.splice(0, click_buffer.length);
-
-  const updatedBatchData = batchData.map((op) => {
-    let updated_op = { ...op, insertedAt: insertedAt };
-
-    return updated_op;
-  });
-
-  updatePlaceCount(updatedBatchData);
-  await clickValue.insertMany(updatedBatchData);
+  let updatedClickMessage = {...clickMessage, insertedAt:insertedAt}
+  updatePlaceCount(updatedClickMessage);
   try {
-    await pgdb.insert(clickResultTable).values(updatedBatchData)
+    await pgdb.insert(clickResultTable).values(updatedClickMessage)
     console.log("Saved the clicked location details to PostgreSQL");
   } catch (error) {
     console.log(
@@ -220,35 +137,26 @@ async function flushClickBuffer() {
 }
 
 async function saveData(topic, messages) {
-  if (topic == TOPICS.CLICKED_VALUE) {
-    const result = clickResultValid.safeParse(messages);
+  if (topic == KAFKA_CONSUMERS[0]['TOPIC']) {
+    const result = clickSchema.safeParse(messages);
     if (!result.success) {
       console.log(result.error);
     } else {
-      cacheData(topic, messages);
-      setTimeout(() => {
-        flushClickBuffer();
-      }, 60000);
+      flushClickBuffer(messages);
     }
-  } else if (topic == TOPICS.EXTERNAL_DATA) {
-    const result = externalDataValid.safeParse(messages);
+  } else if (topic == KAFKA_CONSUMERS[1]['TOPIC']) {
+    const result = externalSchema.safeParse(messages);
     if (!result.success) {
       console.log(result.error);
     } else {
-      cacheData(topic, messages);
-      setTimeout(() => {
-        flushExternalBuffer();
-      }, 60000);
+      flushExternalBuffer(messages);
     }
-  } else if (topic == TOPICS.ORS_RESPONSE) {
-    const result = orsDataValid.safeParse(messages);
+  } else if (topic == KAFKA_CONSUMERS[2]['TOPIC']) {
+    const result = orsSchema.safeParse(messages);
     if(!result.success){
       console.log(result.error);
     } else {
-      cacheData(topic, messages);
-      setTimeout(() => {
-        flushORSBuffer();
-      }, 60000);
+      flushORSBuffer(messages);
     }
   }
 }

@@ -1,14 +1,4 @@
-/*
-
-This is the code for Consumer in Kafka's server
-The job of Consumer is to accept data from the Kafka pipeline and save it into MongoDB
-
-*/
-
-
-import { TOPICS } from "./topics.js";
 import { saveData } from "../controllers/saveData.js";
-
 
 async function runConsumer({ kafka, groupId, topic }) {
   try {
