@@ -79,7 +79,8 @@ async function flushORSBuffer(orsMessage) {
                   Number(orsMessage["duration_min"])) *
                   10000,
               ).toFixed(0)
-          )
+          ),
+          serial_id: crypto.randomUUID()
       };
   } else {
     orsMessage = { ...orsMessage, route_id: "Drv_" + "null_" + (
