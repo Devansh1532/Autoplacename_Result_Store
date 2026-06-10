@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { pgdb } from "../connections.js";
 import { sql } from "drizzle-orm";
+import crypto from 'crypto';
 import {
   externalDataTable,
   clickResultTable,
@@ -92,7 +93,8 @@ async function flushORSBuffer(orsMessage) {
                 Number(orsMessage["to_lat"])) *
                 10000,
             ).toFixed(0)
-        ) };
+        ),
+      serial_id: crypto.randomUUID() };
   }
   console.log(orsMessage);
   updateRouteCount(orsMessage);
@@ -123,7 +125,7 @@ async function flushExternalBuffer(extMessage) {
 
 async function flushClickBuffer(clickMessage) {
   const insertedAt = Date.now().toString();
-  let updatedClickMessage = {...clickMessage, insertedAt:insertedAt}
+  let updatedClickMessage = {...clickMessage, insertedAt:insertedAt, serialID: crypto.randomUUID()}
   updatePlaceCount(updatedClickMessage);
   try {
     await pgdb.insert(clickResultTable).values(updatedClickMessage)

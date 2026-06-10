@@ -1,7 +1,7 @@
 import {serial, integer, text, doublePrecision, pgTable} from 'drizzle-orm/pg-core'
 
 const externalDataTable = pgTable("backupdata_table", {
-  placeId: text().notNull().unique().primaryKey(),
+  placeId: text().notNull().primaryKey(),
   timestamp: text().notNull(),
   placenameEN: text(),
   placenameAR: text(),
@@ -15,6 +15,7 @@ const externalDataTable = pgTable("backupdata_table", {
   source: text(),
 });
 const clickResultTable = pgTable("clickresult_table", {
+  serialId: text().notNull().primaryKey(),
   searchQuery: text().notNull(),
   timestamp: text().notNull(),
   placeId: text().notNull(),
@@ -22,17 +23,18 @@ const clickResultTable = pgTable("clickresult_table", {
   insertedAt: text().notNull(),
 });
 const placeCountTable = pgTable("placecount_table", {
-  placeId: text().unique().primaryKey(),
+  placeId: text().primaryKey(),
   timestamp: text().notNull(),
   count: integer().notNull(),
 });
 const routeCountTable = pgTable("routecount_table", {
-  route_id: text().unique().primaryKey(),
+  route_id: text().primaryKey(),
   timestamp: text().notNull(),
   count: integer().notNull()
 
 });
 const orsDataTable = pgTable("orsdata_table", {
+  serial_id: text().notNull().primaryKey(),
   route_id: text().notNull(),
   from_lat: doublePrecision().notNull(),
   from_lng: doublePrecision().notNull(),
@@ -40,7 +42,9 @@ const orsDataTable = pgTable("orsdata_table", {
   to_lng: doublePrecision().notNull(),
   distance_km: doublePrecision(),
   duration_min: doublePrecision(),
-  source: text()
+  source: text(),
+  error: text(),
+  reason: text()
 });
 
 export  {externalDataTable, clickResultTable, placeCountTable, routeCountTable, orsDataTable};
