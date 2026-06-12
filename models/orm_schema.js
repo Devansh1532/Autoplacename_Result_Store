@@ -44,7 +44,8 @@ const orsDataTable = pgTable("orsdata_table", {
   duration_min: doublePrecision(),
   source: text(),
   error: text(),
-  reason: text()
+  reason: text(),
+  timestamp: text()
 });
 
 export  {externalDataTable, clickResultTable, placeCountTable, routeCountTable, orsDataTable};

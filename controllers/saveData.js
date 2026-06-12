@@ -61,9 +61,11 @@ async function updateRouteCount(savedRoute) {
 }
 
 async function flushORSBuffer(orsMessage) {
+  const date = new Date()
   if (orsMessage["distance_km"] || orsMessage["duration_min"] != null) {
       orsMessage = {
         ...orsMessage,
+        timestamp: date.toISOString(),
         route_id:
           "Drv_" +
           (
@@ -82,8 +84,8 @@ async function flushORSBuffer(orsMessage) {
           ),
           serial_id: crypto.randomUUID()
       };
-  } else {
-    orsMessage = { ...orsMessage, route_id: "Drv_" + "null_" + (
+  } else{
+    orsMessage = { ...orsMessage, serial_id: crypto.randomUUID(), error: orsMessage["error"],  reason: orsMessage["reason"], timestamp: date.toISOString(), route_id: "Drv_" + "null_" + (
           Math.abs(
             (Number(orsMessage["from_lng"]) +
               Number(orsMessage["from_lat"])) *
@@ -95,7 +97,7 @@ async function flushORSBuffer(orsMessage) {
                 10000,
             ).toFixed(0)
         ),
-      serial_id: crypto.randomUUID() };
+    };
   }
   console.log(orsMessage);
   updateRouteCount(orsMessage);
