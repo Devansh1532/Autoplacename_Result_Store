@@ -1,4 +1,4 @@
-import {serial, integer, text, doublePrecision, pgTable} from 'drizzle-orm/pg-core'
+import {integer, text, doublePrecision, pgTable} from 'drizzle-orm/pg-core'
 
 const externalDataTable = pgTable("backupdata_table", {
   placeId: text().notNull().primaryKey(),
@@ -13,7 +13,11 @@ const externalDataTable = pgTable("backupdata_table", {
   postcode: text(),
   address: text(),
   source: text(),
+ 
 });
+
+  
+   
 const clickResultTable = pgTable("clickresult_table", {
   serialId: text().notNull().primaryKey(),
   searchQuery: text().notNull(),
@@ -21,6 +25,7 @@ const clickResultTable = pgTable("clickresult_table", {
   placeId: text().notNull(),
   source: text().notNull(),
   insertedAt: text().notNull(),
+  
 });
 const placeCountTable = pgTable("placecount_table", {
   placeId: text().primaryKey(),
@@ -43,9 +48,9 @@ const orsDataTable = pgTable("orsdata_table", {
   distance_km: doublePrecision(),
   duration_min: doublePrecision(),
   source: text(),
+  timestamp: text(),
   error: text(),
-  reason: text(),
-  timestamp: text()
+  reason: text()
 });
 
 export  {externalDataTable, clickResultTable, placeCountTable, routeCountTable, orsDataTable};

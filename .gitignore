@@ -6,6 +6,9 @@
 /docker-compose.yml
 /drizzle
 /extra_code
+/models/temp_schema.js
+/config/temp_config.js
+
 
 
 

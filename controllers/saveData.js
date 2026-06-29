@@ -61,11 +61,9 @@ async function updateRouteCount(savedRoute) {
 }
 
 async function flushORSBuffer(orsMessage) {
-  const date = new Date()
   if (orsMessage["distance_km"] || orsMessage["duration_min"] != null) {
       orsMessage = {
         ...orsMessage,
-        timestamp: date.toISOString(),
         route_id:
           "Drv_" +
           (
@@ -85,7 +83,7 @@ async function flushORSBuffer(orsMessage) {
           serial_id: crypto.randomUUID()
       };
   } else{
-    orsMessage = { ...orsMessage, serial_id: crypto.randomUUID(), error: orsMessage["error"],  reason: orsMessage["reason"], timestamp: date.toISOString(), route_id: "Drv_" + "null_" + (
+    orsMessage = { ...orsMessage, serial_id: crypto.randomUUID(), error: orsMessage["error"],  reason: orsMessage["reason"], route_id: "Drv_" + "null_" + (
           Math.abs(
             (Number(orsMessage["from_lng"]) +
               Number(orsMessage["from_lat"])) *
@@ -128,7 +126,7 @@ async function flushExternalBuffer(extMessage) {
 
 async function flushClickBuffer(clickMessage) {
   const insertedAt = Date.now().toString();
-  let updatedClickMessage = {...clickMessage, insertedAt:insertedAt, serialID: crypto.randomUUID()}
+  let updatedClickMessage = {...clickMessage, insertedAt:insertedAt, serialId: crypto.randomUUID()}
   updatePlaceCount(updatedClickMessage);
   try {
     await pgdb.insert(clickResultTable).values(updatedClickMessage)
@@ -157,6 +155,9 @@ async function saveData(topic, messages) {
       flushExternalBuffer(messages);
     }
   } else if (topic == KAFKA_CONSUMERS[2]['TOPIC']) {
+    let date = new Date(messages["timestamp"])
+    date = date.toISOString()
+    messages["timestamp"] = date
     const result = orsSchema.safeParse(messages);
     if(!result.success){
       console.log(result.error);

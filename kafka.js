@@ -31,14 +31,18 @@ const kafka =
         // ssl: {
         //   rejectUnauthorized: false,
         // },
-        // sasl:
-        //   process.env.NODE_ENV === "production"
-        //     ? {
+        // sasl: {
         //         mechanism: "scram-sha-256",
         //         username: process.env.KAFKA_USERNAME,
         //         password: process.env.KAFKA_PASSWORD,
-        //       }
-        //     : {},
+        //       },
+          // process.env.NODE_ENV === "production"
+          //   ? {
+          //       mechanism: "scram-sha-256",
+          //       username: process.env.KAFKA_USERNAME,
+          //       password: process.env.KAFKA_PASSWORD,
+          //     }
+          //   : {},
 
         connectionTimeout: 50000,
         requestTimeout: 30000,

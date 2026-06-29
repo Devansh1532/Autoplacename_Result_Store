@@ -24,6 +24,7 @@ const orsSchema = z.object({
   from_lng: z.number().transform((val) => val.toFixed(4)),
   to_lat: z.number().transform((val) => val.toFixed(4)),
   to_lng: z.number().transform((val) => val.toFixed(4)),
+  timestamp: z.string()
 })
 
 
